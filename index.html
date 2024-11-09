@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HispaLibros</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="menu">
+        <button onclick="window.open('all_books.html', '_blank')">Ver Todos los Libros</button>
+    </div>
+    
+    <div id="mapContainer" style="display: flex; position: relative;">
+        <h2 style="text-align: center; color: white; position: absolute; top: 10px; width: 100%;">Pasa el cursor sobre un país para ver los libros</h2>
+        
+        <!-- Imagen de mapa con áreas interactivas -->
+        <div id="map" style="position: relative; width: 100vw; height: 100vh;">
+            <img src="wallpaperflare.jpg" alt="Mapa de América" usemap="#image-map" id="mapElement" style="width: 100%; height: 100%; object-fit: cover;">
+            <map name="image-map">
+                <area target="" alt="mexico" title="Mexico" href="#" onmouseover="showBooks('mexico')" coords="299,394,377,430,427,474,387,501,321,487" shape="poly">
+                <area target="" alt="cuba" title="Cuba" href="#" onmouseover="showBooks('cuba')" coords="447,452,509,469,485,498,454,476" shape="poly">
+                <area target="" alt="venezuela" title="Venezuela" href="#" onmouseover="showBooks('venezuela')" coords="576,531,567,578,540,589,512,527" shape="poly">
+                <area target="" alt="colombia" title="Colombia" href="#" onmouseover="showBooks('colombia')" coords="496,611,461,562,494,523,532,585" shape="poly">
+                <area target="" alt="chile" title="Chile" href="#" onmouseover="showBooks('chile')" coords="569,921,525,848,509,687,545,715,542,757" shape="poly">
+                <area target="" alt="argentina" title="Argentina" href="#" onmouseover="showBooks('argentina')" coords="624,760,573,715,549,762,573,901" shape="poly">
+                <area target="" alt="espana" title="España" href="#" onmouseover="showBooks('espana')" coords="864,337,928,357,888,405" shape="poly">
+                <area target="" alt="nicaragua" title="Nicaragua" href="#" onmouseover="showBooks('nicaragua')" coords="414,516,449,507,443,534,423,534" shape="poly">
+            </map>
+        </div>
+        
+        <!-- Lista de libros para el país seleccionado -->
+        <div id="bookList" style="display:none; position: absolute; top: 100px; left: 20px; color: white; background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 5px;">
+            <h3>Libros disponibles:</h3>
+            <ul id="books"></ul>
+        </div>
+
+        <!-- Pan Buttons -->
+        <button id="upButton" class="pan-button">↑</button>
+        <button id="downButton" class="pan-button">↓</button>
+        <button id="leftButton" class="pan-button">←</button>
+        <button id="rightButton" class="pan-button">→</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/image-map-resizer/1.0.10/js/imageMapResizer.min.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+        // Function to create overlays based on the area coordinates
+        function createOverlays() {
+            const mapAreas = document.querySelectorAll('area');
+            const mapContainer = document.getElementById('map');
+
+            mapAreas.forEach(area => {
+                const coords = area.coords.split(',').map(Number);
+                const shape = area.shape;
+
+                // Only process polygon shapes
+                if (shape === 'poly') {
+                    const overlay = document.createElement('div');
+                    overlay.classList.add('debug-overlay');
+
+                    // Calculate the bounding box for the polygon
+                    let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+                    for (let i = 0; i < coords.length; i += 2) {
+                        const x = coords[i];
+                        const y = coords[i + 1];
+                        if (x < minX) minX = x;
+                        if (y < minY) minY = y;
+                        if (x > maxX) maxX = x;
+                        if (y > maxY) maxY = y;
+                    }
+
+                    // Set the overlay position and size
+                    overlay.style.left = `${minX}px`;
+                    overlay.style.top = `${minY}px`;
+                    overlay.style.width = `${maxX - minX}px`;
+                    overlay.style.height = `${maxY - minY}px`;
+
+                    // Append overlay to the map container
+                    mapContainer.appendChild(overlay);
+                }
+            });
+        }
+
+        // Variables to control map position
+        let xOffset = 0;
+        let yOffset = 0;
+        const panAmount = 50; // Adjust as needed for each button press
+        const mapElement = document.getElementById("mapElement");
+
+        document.getElementById("upButton").addEventListener("click", () => {
+            yOffset -= panAmount;
+            mapElement.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+
+        document.getElementById("downButton").addEventListener("click", () => {
+            yOffset += panAmount;
+            mapElement.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+
+        document.getElementById("rightButton").addEventListener("click", () => {
+            xOffset -= panAmount;
+            mapElement.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+
+        document.getElementById("leftButton").addEventListener("click", () => {
+            xOffset += panAmount;
+            mapElement.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+
+        // Call the function after the page loads
+        window.onload = function() {
+            imageMapResize();  // Resizes the image map
+            createOverlays();  // Creates debugging overlays
+        };
+    </script>
+
+    <style>
+        /* Style for debugging overlays */
+
+        /* Ensure full viewport height and width */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        #mapContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Pan buttons styling */
+        .pan-button {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            padding: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        #upButton { top: 10px; left: 50%; transform: translateX(-50%); }
+        #downButton { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        #leftButton { left: 10px; top: 50%; transform: translateY(-50%); }
+        #rightButton { right: 10px; top: 50%; transform: translateY(-50%); }
+    </style>
+</body>
+</html>
